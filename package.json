@@ -10,7 +10,7 @@
   },
   "version": "1.0.0",
   "engines": {
-    "vscode": "^1.97.0"
+    "vscode": "^1.70.0"
   },
   "keywords": [
     "Shopify",
