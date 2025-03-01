@@ -1,11 +1,33 @@
 {
   "name": "quickstruct-liquid-sections",
   "displayName": "QuickStruct Liquid Sections",
-  "description": "",
+  "description": "QuickStruct Liquid Sections: A Visual Studio Code extension for rapid Shopify theme development. Instantly create Liquid section files with linked CSS/JS assets and schema support to streamline your workflow.",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.97.0"
   },
+  "keywords": [
+    "Shopify",
+    "Liquid",
+    "VSCode",
+    "Visual Studio Code",
+    "Shopify theme",
+    "Liquid section",
+    "Liquid files",
+    "Theme development",
+    "Shopify automation",
+    "Section generator",
+    "Liquid templates",
+    "Shopify assets",
+    "CSS",
+    "JavaScript",
+    "Schema",
+    "VSCode extension",
+    "Shopify developer tools",
+    "Online store editor",
+    "Custom sections",
+    "Shopify snippets"
+  ],
   "categories": [
     "Other"
   ],
