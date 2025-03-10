@@ -39,6 +39,10 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 				
 				sectionContent += `\n`;
+				sectionContent += `
+<div class="${fileName}"> 
+
+</div>\n`;
 				sectionContent += `\n`;
 
 				const scriptOption = await vscode.window.showQuickPick(['Async', 'Defer', 'Skip JavaScript'], { placeHolder: 'Define JavaScript load behavior (or skip adding a script)' });
@@ -48,8 +52,6 @@ export function activate(context: vscode.ExtensionContext) {
 					const scriptTag = scriptOption === 'Async' ? `async: true` : `defer: true`;
 					sectionContent += `\n{{ '${fileName}-javascript.js' | asset_url | script_tag: ${scriptTag} }}\n`;
 				}
-
-				sectionContent += `\n<div class="${fileName}"> </div>\n`;
 
 				sectionContent += `
 {% schema %}
