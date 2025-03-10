@@ -49,11 +49,13 @@ export function activate(context: vscode.ExtensionContext) {
 					sectionContent += `\n{{ '${fileName}-javascript.js' | asset_url | script_tag: ${scriptTag} }}\n`;
 				}
 
+				sectionContent += `\n<div class="${fileName}"> </div>\n`;
+
 				sectionContent += `
 {% schema %}
 {
 	"name": "${fileName}",
-	"class": "${fileName}",
+	"class": "${fileName}-parent",
 	"settings": [],
 	"presets": [
 		{
