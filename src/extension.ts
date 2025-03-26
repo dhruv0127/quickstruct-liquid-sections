@@ -6,8 +6,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const createFileCommand = vscode.commands.registerCommand('quickstruct-liquid-sections.createSectionFile', async () => {
 		const fileNameInput = await vscode.window.showInputBox({
-			prompt: 'Enter the name of the new section file',
-			placeHolder: 'example'
+			prompt: 'Enter the name of the new section file (max 25 characters)',
+			placeHolder: 'Section name ',
+			validateInput: (input) => {
+				return input.length > 25 ? 'File name must not exceed 25 characters' : null;
+			}
 		});
 
 		if (fileNameInput) {
@@ -31,13 +34,21 @@ export function activate(context: vscode.ExtensionContext) {
 				let stylesheetPath = '';
 				let scriptPath = '';
 
-				const addStylesheet = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Do you want to add a stylesheet file to the assets folder?' });
-				if (addStylesheet === 'Yes') {
+				const addStylesheet = await vscode.window.showQuickPick(['Lazy Loaded (for non first fold content)', 'Pre Loaded (For first fold content)' , 'Render Blocking (not recommanded)' , 'Skip CSS'], { placeHolder: 'Do you want to add a stylesheet file to the assets folder?' });
+				if (addStylesheet === 'Lazy Loaded (for non first fold content)') {
 					stylesheetPath = path.join(assetsFolderPath, `${fileName}-stylesheet.css`);
 					fs.writeFileSync(stylesheetPath, '');
-					sectionContent += `{{ '${fileName}-stylesheet.css' | asset_url | stylesheet_tag }}`;
+					sectionContent += `<link rel="stylesheet" href="{{ '${fileName}-stylesheet.css' | asset_url }}" media="print" onload="this.media='all'">`;
+				} else if ( addStylesheet === 'Pre Loaded (For first fold content)' ) {
+					stylesheetPath = path.join(assetsFolderPath, `${fileName}-stylesheet.css`);
+					fs.writeFileSync(stylesheetPath, '');
+					sectionContent += `<link rel="preload" href="{{ '${fileName}-stylesheet.css' | asset_url }}" as="style" onload="this.rel='stylesheet'">`;
+				} else if ( addStylesheet === 'Render Blocking (not recommanded)' ) {
+					stylesheetPath = path.join(assetsFolderPath, `${fileName}-stylesheet.css`);
+					fs.writeFileSync(stylesheetPath, '');
+					sectionContent += `<link rel="stylesheet" href="{{ '${fileName}-stylesheet.css' | asset_url }}">`;
 				}
-				
+
 				sectionContent += `\n`;
 				sectionContent += `
 <div class="${fileName}"> 
@@ -49,8 +60,8 @@ export function activate(context: vscode.ExtensionContext) {
 				if (scriptOption !== 'Skip JavaScript') {
 					scriptPath = path.join(assetsFolderPath, `${fileName}-javascript.js`);
 					fs.writeFileSync(scriptPath, '');
-					const scriptTag = scriptOption === 'Async' ? `async: true` : `defer: true`;
-					sectionContent += `\n{{ '${fileName}-javascript.js' | asset_url | script_tag: ${scriptTag} }}\n`;
+					const scriptTag = scriptOption === 'Async' ? `async` : `defer`;
+					sectionContent += `\n<script src="{{ 'lazyload-js.js' | asset_url }}" ${scriptTag}></script>\n`;
 				}
 
 				sectionContent += `
