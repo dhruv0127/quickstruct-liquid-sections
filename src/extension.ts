@@ -15,6 +15,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if (fileNameInput) {
 			const fileName = fileNameInput.replace(/[\s_&$%@#]/g, '-').toLowerCase();
+			const pascalCaseFileName = fileName
+				.split('-')
+				.map(word => word.charAt(0).toUpperCase() + word.slice(1))
+				.join(' ');
 
 			const workspaceFolders = vscode.workspace.workspaceFolders;
 			if (workspaceFolders) {
@@ -34,16 +38,25 @@ export function activate(context: vscode.ExtensionContext) {
 				let stylesheetPath = '';
 				let scriptPath = '';
 
-				const addStylesheet = await vscode.window.showQuickPick(['Lazy Loaded (for non first fold content)', 'Pre Loaded (For first fold content)' , 'Render Blocking (not recommanded)' , 'Skip CSS'], { placeHolder: 'Do you want to add a stylesheet file to the assets folder?' });
-				if (addStylesheet === 'Lazy Loaded (for non first fold content)') {
+				const addStylesheet = await vscode.window.showQuickPick(
+					[
+						{ label: 'Lazy Loaded', description: ' •  Recommended for non first fold content' },
+						{ label: 'Pre Loaded', description: ' •  Recommended for first fold content' },
+						{ label: 'Render Blocking', description: ' •  Not recommended' },
+						{ label: 'Skip CSS', description: ' •  Who needs CSS anyway? ;)' }
+					],
+					{ placeHolder: 'Select how you want to handle the stylesheet for this section:' }
+				);
+
+				if (addStylesheet?.label === 'Lazy Loaded') {
 					stylesheetPath = path.join(assetsFolderPath, `${fileName}-stylesheet.css`);
 					fs.writeFileSync(stylesheetPath, '');
 					sectionContent += `<link rel="stylesheet" href="{{ '${fileName}-stylesheet.css' | asset_url }}" media="print" onload="this.media='all'">`;
-				} else if ( addStylesheet === 'Pre Loaded (For first fold content)' ) {
+				} else if (addStylesheet?.label === 'Pre Loaded (For first fold content)') {
 					stylesheetPath = path.join(assetsFolderPath, `${fileName}-stylesheet.css`);
 					fs.writeFileSync(stylesheetPath, '');
 					sectionContent += `<link rel="preload" href="{{ '${fileName}-stylesheet.css' | asset_url }}" as="style" onload="this.rel='stylesheet'">`;
-				} else if ( addStylesheet === 'Render Blocking (not recommanded)' ) {
+				} else if (addStylesheet?.label === 'Render Blocking (not recommended)') {
 					stylesheetPath = path.join(assetsFolderPath, `${fileName}-stylesheet.css`);
 					fs.writeFileSync(stylesheetPath, '');
 					sectionContent += `<link rel="stylesheet" href="{{ '${fileName}-stylesheet.css' | asset_url }}">`;
@@ -56,14 +69,41 @@ export function activate(context: vscode.ExtensionContext) {
 </div>\n`;
 				sectionContent += `\n`;
 
-				const scriptOption = await vscode.window.showQuickPick(['Async', 'Defer', 'Skip JavaScript'], { placeHolder: 'Define JavaScript load behavior (or skip adding a script)' });
-				if (scriptOption !== 'Skip JavaScript') {
+				const scriptOption = await vscode.window.showQuickPick(
+					[
+						{ 
+							label: 'Defer', 
+							description: ' •  Downloads the script in parallel with HTML parsing but waits to execute until the HTML is fully loaded (maintains order).' 
+						},
+						{ 
+							label: 'Async', 
+							description: ' •  Downloads the script in parallel with HTML parsing and executes it immediately once ready (order not guaranteed).' 
+						},
+						{ 
+							label: 'Render Blocking', 
+							description: ' •  ⚠️ Not recommended! Uses full network bandwidth to download the script and blocks the main thread until execution is complete, significantly delaying page rendering.' 
+						},
+						{ 
+							label: 'Skip JavaScript', 
+							description: ' •  No JS will be added. Your page will load so fast, it might time-travel! 🚀⌛' 
+						}
+					],
+					{ placeHolder: 'Select JS loading options? • ( and hover on options to read whole description 🫡)' }
+				);
+				
+				if (scriptOption?.label !== 'Skip JavaScript') {
 					scriptPath = path.join(assetsFolderPath, `${fileName}-javascript.js`);
 					fs.writeFileSync(scriptPath, '');
-					const scriptTag = scriptOption === 'Async' ? `async` : `defer`;
-					sectionContent += `\n<script src="{{ 'lazyload-js.js' | asset_url }}" ${scriptTag}></script>\n`;
-				}
-
+					
+					let scriptTag = '';
+					if (scriptOption?.label === 'Async') {
+						scriptTag = 'async';
+					} else if (scriptOption?.label === 'Defer') {
+						scriptTag = 'defer';
+					} // No need to set anything for "Render Blocking" since it defaults to blocking mode
+				
+					sectionContent += `\n<script src="{{ '${fileName}-javascript.js' | asset_url }}" ${scriptTag}></script>\n`;
+				}						
 				sectionContent += `
 {% schema %}
 {
@@ -72,7 +112,7 @@ export function activate(context: vscode.ExtensionContext) {
 	"settings": [],
 	"presets": [
 		{
-			"name": "${fileName}"
+			"name": "${pascalCaseFileName}"
 		}
 	]
 }
